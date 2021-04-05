@@ -3,19 +3,19 @@ import os
 
 from click import command, group, argument, Path, echo, pass_context
 
-from code.flake_master.utils.presets import fetch_preset, apply_preset_to_path
+from filecode.flake_master.utils.presets import fetch_preset, apply_preset_to_path
 
 
 @group()
 def cli():
-    pass
+    pass  # pragma: no cover
 
 
 @command()
 @argument('preset_name')
 @argument('project_path', type=Path(exists=True))
 @pass_context
-def setup(ctx, preset_name, project_path):
+def flake_setup(ctx, preset_name, project_path):
     """Setup flake8 preset to specified directory."""
     preset_file_name = ctx.obj['preset_file_name']
     preset_file_path = os.path.join(project_path, preset_file_name)
@@ -26,7 +26,6 @@ def setup(ctx, preset_name, project_path):
             err=True,
         )
         exit(1)
-
     preset = fetch_preset(preset_name_or_url_or_path=preset_name)
     if not preset:
         echo(f'Error fetching preset {preset_name}.', err=True)
@@ -62,15 +61,15 @@ def upgrade(ctx, project_path):
         apply_preset_to_path(fresh_preset, project_path, preset_file_name=preset_file_name)
 
 
-cli.add_command(setup)
+cli.add_command(flake_setup)
 cli.add_command(upgrade)
 
 
 def main():
-    cli(
+    cli(  # pragma: no cover
         obj={'preset_file_name': '.flake_master'},
     )
 
 
 if __name__ == '__main__':
-    main()
+    main()  # pragma: no cover

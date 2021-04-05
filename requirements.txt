@@ -12,3 +12,9 @@ typing-extensions==3.7.4.2
 deal==4.5.0
 
 safety==1.9.0
+pytest==6.2.2
+pytest-mock==3.5.1
+pytest-cov==2.11.1
+coverage==5.5
+mock-open==1.4.0
+flake8==3.8.4

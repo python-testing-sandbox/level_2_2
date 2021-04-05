@@ -4,7 +4,7 @@ from typing import Optional
 import deal
 from requests import get
 
-from code.flake_master.common_types import Flake8Preset
+from filecode.flake_master.common_types import Flake8Preset
 
 
 def load_preset_from_file(preset_file_path: str) -> Optional[Flake8Preset]:
