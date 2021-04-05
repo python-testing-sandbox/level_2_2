@@ -1,4 +1,5 @@
 import pytest
+from click.testing import CliRunner
 
 from code.flake_master.common_types import Flake8Preset
 
@@ -31,3 +32,8 @@ def flake8_preset_factory(config_parser_with_data):
                 flake8_plugins=list(config_parser_with_data['flake8_plugins'].items()),
             )
     return flake8_preset
+
+
+@pytest.fixture
+def runner():
+    return CliRunner()

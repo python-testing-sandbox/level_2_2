@@ -234,4 +234,4 @@ def test_apply_preset_to_path(capsys, mocker, flake8_preset_factory):
     apply_preset_to_path(flake8_preset, 'path', 'name')
     captured = capsys.readouterr()
 
-    assert captured.out == ('\tAdding 3 requirements...\n\tCreating flake8 config...\n\tCreating preset file...\n')
+    assert captured.out == '\tAdding 3 requirements...\n\tCreating flake8 config...\n\tCreating preset file...\n'
