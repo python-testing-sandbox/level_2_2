@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/katyaaa86/level_2_2.svg?branch=main)](https://travis-ci.org/katyaaa86/level_2_2)
-[![codecov](https://codecov.io/gh/katyaaa86/level_2_1/branch/master/graph/badge.svg)](https://codecov.io/gh/katyaaa86/level_2_2)
+[![codecov](https://codecov.io/gh/katyaaa86/level_2_2/branch/main/graph/badge.svg)](https://codecov.io/gh/katyaaa86/level_2_2)
 
 # Testing sandbox level 2.2
 
