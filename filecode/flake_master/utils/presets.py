@@ -6,9 +6,9 @@ from typing import List, Tuple, Optional
 import deal
 from click import echo
 
-from code.flake_master.common_types import Flake8Preset, Flake8PresetInfo
-from code.flake_master.utils.preset_fetchers import load_preset_from_file, load_preset_from_url
-from code.flake_master.utils.requirements import merge_requirements_data
+from filecode.flake_master.common_types import Flake8Preset, Flake8PresetInfo
+from filecode.flake_master.utils.preset_fetchers import load_preset_from_file, load_preset_from_url
+from filecode.flake_master.utils.requirements import merge_requirements_data
 
 
 def fetch_preset(
@@ -130,8 +130,7 @@ def add_flake8_config(
     else:
         echo(f'\t\tUpdating {config_path}...')
         parser.read(config_path)
-
-    if flake8_section_name not in parser:
+    if flake8_section_name not in parser:  # pragma: no cover
         parser.add_section(flake8_section_name)
     for param_name, param_value in flake8_config:
         parser[flake8_section_name][param_name] = param_value
