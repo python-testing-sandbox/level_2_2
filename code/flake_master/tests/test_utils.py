@@ -18,6 +18,7 @@ from code.flake_master.utils.requirements import merge_requirements_data, find_r
         ('http://yandex.ru', None, 'http://repo.ru', 'http://yandex.ru'),
         ('preset_name', None, 'http://repo.ru', 'http://repo.ru/master/presets/preset_name.cfg'),
         ('preset_name', {'url': 'http://yandex.ru'}, 'http://repo.ru', 'http://yandex.ru'),
+        (None, {'url': 'http://yandex.ru'}, 'http://repo.ru', 'http://yandex.ru'),
     ]
 )
 def test_extract_preset_url(preset_name_or_url_or_path, presets_repo_url, preset_info, expected):
