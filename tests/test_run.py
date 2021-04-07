@@ -15,19 +15,20 @@ from filecode.flake_master.run import flake_setup, upgrade
 )
 def test_flake_setup(mocker, exists, is_fetch, output, exit_code):
     obj = {'preset_file_name': '.flake_master'}
-    mocker.patch('filecode.flake_master.run.Path.convert', mocker.Mock(return_value='path'))
+    project_path = 'path'
+    mocker.patch('filecode.flake_master.run.Path.convert', mocker.Mock(return_value=project_path))
     fetch_preset = mocker.patch('filecode.flake_master.run.fetch_preset', return_value=None)
     if is_fetch:
         fetch_preset.return_value = mocker.Mock()
         fetch_preset().name = 'name'
         fetch_preset().revision = 'revision'
     mocker.patch('filecode.flake_master.run.apply_preset_to_path')
-    os = mocker.patch('filecode.flake_master.run.os', spec=['path'])
-    os.path.join.return_value = 'path'
+    os = mocker.patch('filecode.flake_master.run.os', spec=[project_path])
+    os.path.join.return_value = project_path
     os.path.exists.return_value = exists
 
     runner = CliRunner()
-    result = runner.invoke(flake_setup, ['rose', 'path'], obj=obj)
+    result = runner.invoke(flake_setup, ['rose', project_path], obj=obj)
     assert result.output == output
     assert result.exit_code == exit_code
 
@@ -43,9 +44,10 @@ def test_flake_setup(mocker, exists, is_fetch, output, exit_code):
 )
 def test_upgrade(mocker, exists, preset_info, output, exit_code):
     obj = {'preset_file_name': '.flake_master'}
-    mocker.patch('filecode.flake_master.run.Path.convert', mocker.Mock(return_value='path'))
-    os = mocker.patch('filecode.flake_master.run.os', spec=['path'])
-    os.path.join.return_value = 'path'
+    project_path = 'path'
+    mocker.patch('filecode.flake_master.run.Path.convert', mocker.Mock(return_value=project_path))
+    os = mocker.patch('filecode.flake_master.run.os', spec=[project_path])
+    os.path.join.return_value = project_path
     os.path.exists.return_value = exists
     mocker.patch('filecode.flake_master.run.open', mocker.mock_open(read_data=preset_info))
     fetch_preset = mocker.patch('filecode.flake_master.run.fetch_preset', return_value=mocker.Mock())
@@ -53,6 +55,6 @@ def test_upgrade(mocker, exists, preset_info, output, exit_code):
     mocker.patch('filecode.flake_master.run.apply_preset_to_path')
 
     runner = CliRunner()
-    result = runner.invoke(upgrade, ['path'], obj=obj)
+    result = runner.invoke(upgrade, [project_path], obj=obj)
     assert result.output == output
     assert result.exit_code == exit_code

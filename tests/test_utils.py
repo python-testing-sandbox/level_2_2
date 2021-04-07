@@ -2,39 +2,33 @@ import pytest
 
 import filecode
 
-from filecode.flake_master.common_types import Flake8Preset
-from filecode.flake_master.utils.preset_fetchers import load_preset_from_file, load_preset_from_url
+from filecode.flake_master.utils.preset_fetchers import load_preset_from_file, load_preset_from_url, \
+    parse_preset_from_str_config
 from filecode.flake_master.utils.presets import (
     extract_preset_url, extract_preset_file_path, apply_preset_to_path,
     add_packages_to_requirements_file, add_flake8_config, create_preset_file, extract_preset_credentials)
 from filecode.flake_master.utils.requirements import merge_requirements_data, find_requirement_in_list
 
 
-def test_load_preset_from_file(mocker, mock_parse_preset_from_str_config):
-    mocker.patch('filecode.flake_master.utils.preset_fetchers.open', mocker.mock_open(read_data='data'))
-    assert load_preset_from_file('filepath') == mock_parse_preset_from_str_config()
-    assert mock_parse_preset_from_str_config.call_count == 2
+def test_load_preset_from_file(mocker, flake8_preset_factory, read_data):
+    mocker.patch('filecode.flake_master.utils.preset_fetchers.open', mocker.mock_open(read_data=read_data))
+    expected = flake8_preset_factory(filepath='filepath')
+    assert load_preset_from_file('filepath') == expected
 
 
-def test_load_preset_from_url(mocker, mock_parse_preset_from_str_config):
+def test_load_preset_from_url(mocker, flake8_preset_factory, read_data):
     get = mocker.patch('filecode.flake_master.utils.preset_fetchers.get')
-    assert load_preset_from_url('url') == mock_parse_preset_from_str_config()
-    assert mock_parse_preset_from_str_config.call_count == 2
+    get().text = read_data
+    expected = flake8_preset_factory(config_url='url')
+    assert load_preset_from_url('url') == expected
     get.assert_called_with('url')
 
 
-def test_parse_preset_from_str_config(mocker, config_parser_dict):
+def test_parse_preset_from_str_config(mocker, flake8_preset_factory, config_parser_dict):
     parser = mocker.patch('filecode.flake_master.utils.preset_fetchers.configparser')
     parser.ConfigParser().__getitem__.side_effect = config_parser_dict.__getitem__
-    result = Flake8Preset(
-        name='name_value',
-        revision='revision_value',
-        config_url='url',
-        filepath='filepath',
-        flake8_plugins=[('key_1', 'value_1')],
-        flake8_config=[('key_2', 'value_2')],
-    )
-    assert filecode.flake_master.utils.preset_fetchers.parse_preset_from_str_config('text', 'filepath', 'url') == result
+    expected = flake8_preset_factory(config_url='url', filepath='filepath')
+    assert parse_preset_from_str_config('text', 'filepath', 'url') == expected
 
 
 @pytest.mark.parametrize(
@@ -63,7 +57,7 @@ def test_extract_preset_credentials(mocker):
 
 
 @pytest.mark.parametrize(
-    'preset_name_or_url_or_path, preset_info, exists, expected',
+    'preset_name_or_url_or_path, preset_info, is_path_exists, expected',
     [
         ('name.cfg', {'filepath': 'path'}, True, 'path'),
         ('name.cfg', {'filepath': ''}, True, 'abspath'),
@@ -72,8 +66,8 @@ def test_extract_preset_credentials(mocker):
         ('', {}, False, None),
     ],
 )
-def test_extract_preset_file_path(os, preset_name_or_url_or_path, preset_info, exists, expected):
-    os.path.exists.return_value = exists
+def test_extract_preset_file_path(os, preset_name_or_url_or_path, preset_info, is_path_exists, expected):
+    os.path.exists.return_value = is_path_exists
     os.path.abspath.return_value = 'abspath'
     assert extract_preset_file_path(preset_name_or_url_or_path, preset_info) == expected
 
@@ -92,6 +86,7 @@ def test_extract_preset_url(preset_name_or_url_or_path, preset_info, presets_rep
 
 
 def test_apply_preset_to_path(mocker, capsys):
+    path = 'path'
     add_packages_to_requirements_file = mocker.patch(
         'filecode.flake_master.utils.presets.add_packages_to_requirements_file',
     )
@@ -101,56 +96,55 @@ def test_apply_preset_to_path(mocker, capsys):
     preset.flake8_plugins = ['plugins']
     preset.flake8_config = 'config'
 
-    apply_preset_to_path(preset, 'path', 'file_name')
+    apply_preset_to_path(preset, path, 'file_name')
     out, err = capsys.readouterr()
 
     assert out == '\tAdding 1 requirements...\n\tCreating flake8 config...\n\tCreating preset file...\n'
     add_packages_to_requirements_file.assert_called_with(
-        ['plugins'],
-        'path',
+        preset.flake8_plugins,
+        path,
         requirements_files_names=['requirements.txt', 'requirements.txt'],
         default_requirements_file_name='requirements.txt',
     )
-    add_flake8_config.assert_called_with('config', 'path', config_file_name='setup.cfg')
-    create_preset_file.assert_called_with(preset, 'path', preset_file_name='file_name')
+    add_flake8_config.assert_called_with('config', path, config_file_name='setup.cfg')
+    create_preset_file.assert_called_with(preset, path, preset_file_name='file_name')
 
 
 @pytest.mark.parametrize(
-    'exists, echo',
+    'is_path_exists',
     [
-        (True, '\t\tadding to path...\n'),
-        (False, '\t\tcreating filename...\n'),
+        (True),
+        (False),
     ],
 )
-def test_add_packages_to_requirements_file(mocker, os, capsys, exists, echo):
-    os.path.join.return_value = 'path'
-    mock_open = mocker.patch(
-        'filecode.flake_master.utils.presets.open',
-        mocker.mock_open(read_data='data\n'),
-        create=True,
-    )
-    os.path.exists.return_value = exists
-    merge_requirements_data = mocker.patch('filecode.flake_master.utils.presets.merge_requirements_data')
-    add_packages_to_requirements_file([('flake', 'plugin')], 'path', ['filename'], 'filename')
+def test_add_packages_to_requirements_file(os, tmpdir, capsys, is_path_exists):
+    raw_old_requirements = 'coverage==5.5\npytest==6.2.2\n'
+    flake_plugins = [('flake', '3'), ('flake', '8')]
+
+    file = tmpdir.join('example.txt')
+    file.write(raw_old_requirements)
+    os.path.join.return_value = file.strpath
+    os.path.exists.return_value = is_path_exists
+    add_packages_to_requirements_file(flake_plugins, 'path', ['filename'], 'default_filename')
     out, err = capsys.readouterr()
 
-    assert out == echo
-    if exists:
-        merge_requirements_data.assert_called_with(['data'], [('flake', 'plugin')])
-        mock_open().write.assert_called_with(merge_requirements_data.return_value)
+    if is_path_exists:
+        assert out == f'\t\tadding to {file.strpath}...\n'
+        assert file.read() == 'coverage==5.5\npytest==6.2.2\nflake==3\nflake==8\n'
     else:
-        mock_open().write.assert_called_with('flake==plugin')
+        assert out == '\t\tcreating default_filename...\n'
+        assert file.read() == 'flake==3\nflake==8'
 
 
 @pytest.mark.parametrize(
-    'exists, params',
+    'is_path_exists, params',
     [
         (True, {'flake8': {'flake': 'param', 'key': 'value'}}),
         (True, {}),
         (False, {'flake': 'flake8'}),
     ],
 )
-def test_add_flake8_config(mocker, os, capsys, exists, params):
+def test_add_flake8_config(mocker, os, capsys, is_path_exists, params):
     mock_open = mocker.patch(
         'filecode.flake_master.utils.presets.open',
         mocker.mock_open(read_data='data\n'), create=True)
@@ -158,12 +152,12 @@ def test_add_flake8_config(mocker, os, capsys, exists, params):
     parser().__getitem__.return_value = params
 
     os.path.join.return_value = 'path'
-    os.path.exists.return_value = exists
+    os.path.exists.return_value = is_path_exists
 
     add_flake8_config([('flake', 'key')], 'path', 'filename')
     out, err = capsys.readouterr()
 
-    if exists:
+    if is_path_exists:
         assert out == f'\t\tUpdating {os.path.join.return_value}...\n'
         parser().add_section.assert_called_with('flake8')
     else:
