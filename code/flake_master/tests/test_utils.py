@@ -71,9 +71,9 @@ def test_parse_preset_from_str_config(flake8_preset_factory, row_config_data):
 
 
 def test_load_preset_from_url(mocker, flake8_preset_factory, row_config_data):
-    response = mocker.patch('code.flake_master.utils.preset_fetchers.get', autospe=True)
-    response().text = row_config_data
+    response = mocker.patch('code.flake_master.utils.preset_fetchers.get', autospec=True)
     url = 'any url'
+    response(url).text = row_config_data
     expected = flake8_preset_factory(config_url=url)
 
     assert load_preset_from_url(url) == expected
