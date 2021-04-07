@@ -3,8 +3,7 @@ from unittest.mock import Mock, mock_open
 
 import pytest
 
-
-from code.flake_master.run import setup_preset, upgrade_preset
+from code.flake_master.run import setup_preset, upgrade
 
 
 @pytest.mark.parametrize(
@@ -49,7 +48,7 @@ def test_setup_preset(mocker, is_path_exists, preset, runner, expected_exit_code
         (True, '{"name": "preset_name", "revision": "3"}', 0),
     ]
 )
-def test_upgrade_preset(mocker, is_path_exists, preset_info_row, runner, expected_exit_code):
+def test_upgrade(mocker, is_path_exists, preset_info_row, runner, expected_exit_code):
     obj = {'preset_file_name': '.flake_master'}
     project_path = 'path'
     file_path = 'file_path'
@@ -75,7 +74,7 @@ def test_upgrade_preset(mocker, is_path_exists, preset_info_row, runner, expecte
     else:
         expected_output = ''
 
-    result = runner.invoke(upgrade_preset, [project_path], obj=obj)
+    result = runner.invoke(upgrade, [project_path], obj=obj)
 
     assert result.output == expected_output
     assert result.exit_code == expected_exit_code

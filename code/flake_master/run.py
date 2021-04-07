@@ -40,7 +40,7 @@ def setup_preset(ctx, preset_name, project_path):
 @command()
 @argument('project_path', type=Path(exists=True))
 @pass_context
-def upgrade_preset(ctx, project_path):
+def upgrade(ctx, project_path):
     """Upgrade already deployed flake8 preset to new version."""
     preset_file_name = ctx.obj['preset_file_name']
     preset_file_path = os.path.join(project_path, preset_file_name)
@@ -63,7 +63,7 @@ def upgrade_preset(ctx, project_path):
 
 
 cli.add_command(setup_preset)
-cli.add_command(upgrade_preset)
+cli.add_command(upgrade)
 
 
 def main():
