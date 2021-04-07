@@ -106,7 +106,7 @@ def add_packages_to_requirements_file(
             continue
         echo(f'\t\tadding to {requirements_file_path}...')
         with open(requirements_file_path, 'r') as file_handler:
-            raw_old_requirements = [l.strip() for l in file_handler.readlines()]
+            raw_old_requirements = [l.strip() for l in file_handler.readlines()]  # noqa: E741
         requirements = merge_requirements_data(raw_old_requirements, flake8_plugins)
         with open(requirements_file_path, 'w') as file_handler:
             file_handler.write(requirements)
